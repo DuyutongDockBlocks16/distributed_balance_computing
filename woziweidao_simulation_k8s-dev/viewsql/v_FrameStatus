@@ -1,0 +1,22 @@
+create View IF NOT EXISTS wzwd.v_wzwd_ods_game_AllFrameTable as
+SELECT
+tb_framestatus_data.*
+FROM
+(
+    SELECT
+    nm_version_p,
+    proc_version,
+    bd_A_index_start,
+    bd_B_index_start
+    FROM wzwd.wzwd_ods_game_Success_d
+) tb_success
+LEFT JOIN
+(
+    SELECT
+    *
+    FROM wzwd.wzwd_ods_game_AllFrameTable_d
+) tb_framestatus_data
+on   tb_success.nm_version_p = tb_framestatus_data.nm_version_p
+and  tb_success.proc_version = tb_framestatus_data.proc_version
+and  tb_success.bd_A_index_start = tb_framestatus_data.bd_A_index
+and  tb_success.bd_B_index_start = tb_framestatus_data.bd_B_index

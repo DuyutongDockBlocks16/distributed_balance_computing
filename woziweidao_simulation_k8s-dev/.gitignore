@@ -1,0 +1,14 @@
+/spark_lua/
+.idea/*
+.vscode
+*~
+.DS_Store
+*.jar
+*.war
+*.zip
+app.py
+__pycache__/
+call.py
+*.csv
+/result/
+venv/

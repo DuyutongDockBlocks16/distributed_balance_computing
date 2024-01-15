@@ -1,0 +1,12 @@
+-- flaskdb.fight_simlulation_data definition
+
+CREATE TABLE `fight_simlulation_data` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `file_names` varchar(3000) NOT NULL,
+  `rand_start` varchar(20) NOT NULL,
+  `rand_end` varchar(20) NOT NULL,
+  `nm_version` varchar(20) NOT NULL,
+  `proc_version` varchar(20) NOT NULL,
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb3;

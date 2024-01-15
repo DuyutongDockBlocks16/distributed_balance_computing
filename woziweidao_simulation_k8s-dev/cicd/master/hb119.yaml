@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: hb119-ai-wzwd
+  name: __NAME__
+  annotations:
+    service.beta.kubernetes.io/alibaba-cloud-loadbalancer-spec: slb.s1.small
+    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: intranet
+spec:
+  selector:
+    app: __NAME__     #标签信息与deployment的label信息一致
+  ports:
+    - name: api
+      port: 5000        # PodIP:5000     供集群中其它container访问端口
+      targetPort: 5000  # containerIP:5000  后端pod中container暴露的端口
+      protocol: TCP
+    - name: monitor
+      port: 5555
+      targetPort: 5555
+      protocol: TCP
+  type: LoadBalancer  # 指定service类型
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: hb119-ai-wzwd
+  name: __NAME__
+spec:
+  replicas: __REPLICAS__
+  selector:
+    matchLabels:
+      app: __NAME__
+  template:
+    metadata:
+      labels:
+        app: __NAME__
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node
+                    operator: In
+                    values:
+                      - wzwd
+      tolerations:
+        - effect: NoSchedule
+          key: dedicated
+          operator: Equal
+          value: wzwd
+      volumes:
+        - name: __NAME__
+          emptyDir:
+            sizeLimit: 1Gi # 日志磁盘的大小
+
+      containers:
+      - name: __NAME__
+        image: harbor-pull.mgr.jjweb.cn/data-analysis/__NAME__:__VERSION__
+        imagePullPolicy: Always
+        env:
+          - name: ENV
+            value: "production"
+          - name: LOG_PATH
+            value: "/data/logs/data-analysis/"
+
+#        livenessProbe:
+#          failureThreshold: 3
+#          httpGet:
+#            path: /health
+#            port: 5000
+#            scheme: HTTP
+#          initialDelaySeconds: 10
+#          periodSeconds: 5
+#          successThreshold: 1
+#          timeoutSeconds: 6
+#        readinessProbe:
+#          failureThreshold: 3
+#          httpGet:
+#            path: /health
+#            port: 5000
+#            scheme: HTTP
+#          initialDelaySeconds: 10
+#          periodSeconds: 2
+#          successThreshold: 2
+#          timeoutSeconds: 2
+
+        ports:
+        - containerPort: 5000
+        - containerPort: 5555
+        resources:
+          requests:
+            memory: __MEM__
+            cpu: __CPU__
+          limits:
+            memory: __MEM__
+            cpu: __CPU__
+
+        volumeMounts:
+          - name: __NAME__
+            mountPath: /data/logs/data-analysis/
+      imagePullSecrets:
+      - name: data-analysis-zhouxm

@@ -1,0 +1,8 @@
+权限：redis、mysql、kafka
+配置：mysqlconfig.py、setup.py、celeryconfig.py
+测试：flower任务结果、kafka的数据条数和Hive的数据条数的比较、Hive的数据内容与原生Lua生成的数据内容的比较
+
+计划：
+创建成功对局的视图
+redis断线重连
+任务完成的回调

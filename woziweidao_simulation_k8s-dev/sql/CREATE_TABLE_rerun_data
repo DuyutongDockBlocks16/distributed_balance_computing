@@ -1,0 +1,13 @@
+-- flaskdb.rerun_data definition
+
+CREATE TABLE `rerun_data` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `mode` varchar(20) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `rand_start` varchar(20) NOT NULL,
+  `rand_end` varchar(20) NOT NULL,
+  `nm_version` varchar(20) NOT NULL,
+  `proc_version` varchar(20) NOT NULL,
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb3;

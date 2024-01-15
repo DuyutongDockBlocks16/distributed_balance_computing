@@ -1,0 +1,134 @@
+stages:
+  - build
+  - deploy
+
+image_build_hb119_master:
+  tags:
+  - local-prod
+  stage: build
+  image: harbor-pull.mgr.jjweb.cn/jenkins-dev/docker:latest
+  variables:
+    TYPE: master
+  script:
+    - docker login -u ${CI_HARBOR_USER} -p ${CI_HARBOR_PASSWORD} "harbor-push.mgr.jjweb.cn"
+    - docker login -u ${CI_HARBOR_USER} -p ${CI_HARBOR_PASSWORD} "harbor-pull.mgr.jjweb.cn"
+    - docker build --network=host -t "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" -f cicd/${TYPE}/Dockerfile .
+    - docker tag "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" "harbor-push.mgr.jjweb.cn/data-analysis/${CI_SERVICE_NAME}-${TYPE}:${CI_COMMIT_SHA:0:8}"
+    - docker push "harbor-push.mgr.jjweb.cn/data-analysis/${CI_SERVICE_NAME}-${TYPE}:${CI_COMMIT_SHA:0:8}"
+  only:
+    - release-hb119-master
+
+image_build_hb119_worker:
+  tags:
+  - local-prod
+  stage: build
+  image: harbor-pull.mgr.jjweb.cn/jenkins-dev/docker:latest
+  variables:
+    TYPE: worker
+  script:
+    - docker login -u ${CI_HARBOR_USER} -p ${CI_HARBOR_PASSWORD} "harbor-push.mgr.jjweb.cn"
+    - docker login -u ${CI_HARBOR_USER} -p ${CI_HARBOR_PASSWORD} "harbor-pull.mgr.jjweb.cn"
+    - docker build --network=host -t "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" -f cicd/${TYPE}/Dockerfile .
+    - docker tag "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" "harbor-push.mgr.jjweb.cn/data-analysis/${CI_SERVICE_NAME}-${TYPE}:${CI_COMMIT_SHA:0:8}"
+    - docker push "harbor-push.mgr.jjweb.cn/data-analysis/${CI_SERVICE_NAME}-${TYPE}:${CI_COMMIT_SHA:0:8}"
+  only:
+    - release-hb119-worker
+
+deploy-hb119-master:
+  tags:
+  - hb119-ai-02
+  image: harbor-pull.mgr.jjweb.cn/jenkins-dev/k8s-kubectl:latest
+  stage: deploy
+  variables:
+    TYPE: master
+  script:
+    - kubectl version
+    - cd cicd/${TYPE}
+    - sed -i "s/__VERSION__/${CI_COMMIT_SHA:0:8}/" hb119.yaml
+    - sed -i "s/__NAME__/${CI_SERVICE_NAME}-${TYPE}/" hb119.yaml
+    - sed -i "s/__REPLICAS__/1/" hb119.yaml
+    - sed -i "s/__MEM__/${CI_PROD_MEM}/" hb119.yaml
+    - sed -i "s/__CPU__/${CI_PROD_CPU}/" hb119.yaml
+    - kubectl apply -f hb119.yaml
+  only:
+    - release-hb119-master
+
+deploy-hb119-worker:
+  tags:
+  - hb119-ai-02
+  image: harbor-pull.mgr.jjweb.cn/jenkins-dev/k8s-kubectl:latest
+  stage: deploy
+  variables:
+    TYPE: worker
+  script:
+    - kubectl version
+    - cd cicd/${TYPE}
+    - sed -i "s/__VERSION__/${CI_COMMIT_SHA:0:8}/" hb119.yaml
+    - sed -i "s/__NAME__/${CI_SERVICE_NAME}-${TYPE}/" hb119.yaml
+    - sed -i "s/__REPLICAS__/${CI_PROD_REPLICAS}/" hb119.yaml
+    - sed -i "s/__MEM__/${CI_PROD_MEM}/" hb119.yaml
+    - sed -i "s/__CPU__/${CI_PROD_CPU}/" hb119.yaml
+    - kubectl apply -f hb119.yaml
+  only:
+    - release-hb119-worker
+
+
+
+image_build_tk02:
+  tags:
+  - local-prod
+  stage: build
+  image: harbor-pull.mgr.jjweb.cn/jenkins-dev/docker:latest
+  variables:
+    TYPE1: master
+    TYPE2: worker
+  script:
+    - docker login -u ${CI_HARBOR_USER} -p ${CI_HARBOR_PASSWORD} "192.168.249.250"
+    # master
+    - docker build --network=host -t "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" -f cicd/${TYPE1}/Dockerfile .
+    - docker tag "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" "192.168.249.250/ai-mobile/${CI_SERVICE_NAME}-${TYPE1}:${CI_COMMIT_SHA:0:8}"
+    - docker push "192.168.249.250/ai-mobile/${CI_SERVICE_NAME}-${TYPE1}:${CI_COMMIT_SHA:0:8}"
+    # worker
+    - docker build --network=host -t "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" -f cicd/${TYPE2}/Dockerfile .
+    - docker tag "${CI_SERVICE_NAME}:${CI_COMMIT_SHA:0:8}" "192.168.249.250/ai-mobile/${CI_SERVICE_NAME}-${TYPE2}:${CI_COMMIT_SHA:0:8}"
+    - docker push "192.168.249.250/ai-mobile/${CI_SERVICE_NAME}-${TYPE2}:${CI_COMMIT_SHA:0:8}"
+  only:
+    - release-test
+
+deploy-tk02-master:
+  tags:
+  - tk02
+  image: 192.168.249.250/library/k8s-kubectl:latest
+  stage: deploy
+  variables:
+    TYPE: master
+  script:
+    - kubectl version
+    - cd cicd/${TYPE}
+    - sed -i "s/__VERSION__/${CI_COMMIT_SHA:0:8}/" tk02.yaml
+    - sed -i "s/__NAME__/${CI_SERVICE_NAME}-${TYPE}/" tk02.yaml
+    - sed -i "s/__REPLICAS__/1/" tk02.yaml
+    - sed -i "s/__MEM__/${CI_PROD_MEM}/" tk02.yaml
+    - sed -i "s/__CPU__/${CI_PROD_CPU}/" tk02.yaml
+    - kubectl apply -f tk02.yaml
+  only:
+    - release-test
+
+deploy-tk02-worker:
+  tags:
+  - tk02
+  image: 192.168.249.250/library/k8s-kubectl:latest
+  stage: deploy
+  variables:
+    TYPE: worker
+  script:
+    - kubectl version
+    - cd cicd/${TYPE}
+    - sed -i "s/__VERSION__/${CI_COMMIT_SHA:0:8}/" tk02.yaml
+    - sed -i "s/__NAME__/${CI_SERVICE_NAME}-${TYPE}/" tk02.yaml
+    - sed -i "s/__REPLICAS__/${CI_TEST_REPLICAS}/" tk02.yaml
+    - sed -i "s/__MEM__/${CI_PROD_MEM}/" tk02.yaml
+    - sed -i "s/__CPU__/${CI_PROD_CPU}/" tk02.yaml
+    - kubectl apply -f tk02.yaml
+  only:
+    - release-test

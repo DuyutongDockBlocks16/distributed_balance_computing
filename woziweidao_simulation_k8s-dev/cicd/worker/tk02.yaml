@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: tk02-data-ai
+  name: __NAME__
+spec:
+  replicas: __REPLICAS__
+  selector:
+    matchLabels:
+      app: __NAME__
+  template:
+    metadata:
+      labels:
+        app: __NAME__
+    spec:
+      volumes:
+        - name: __NAME__
+          emptyDir:
+            sizeLimit: 1Gi # 日志磁盘的大小
+
+      containers:
+      - name: __NAME__
+        image: 192.168.249.250/ai-mobile/__NAME__:__VERSION__
+        imagePullPolicy: Always
+        env:
+          - name: ENV
+            value: "testing"
+          - name: LOG_PATH
+            value: "/data/logs/data-analysis/"
+
+#        livenessProbe:
+#          failureThreshold: 3
+#          httpGet:
+#            path: /health
+#            port: 5000
+#            scheme: HTTP
+#          initialDelaySeconds: 10
+#          periodSeconds: 5
+#          successThreshold: 1
+#          timeoutSeconds: 6
+#        readinessProbe:
+#          failureThreshold: 3
+#          httpGet:
+#            path: /health
+#            port: 5000
+#            scheme: HTTP
+#          initialDelaySeconds: 10
+#          periodSeconds: 2
+#          successThreshold: 2
+#          timeoutSeconds: 2
+
+        ports:
+        - containerPort: 5000
+        - containerPort: 5555
+        resources:
+          requests:
+            memory: __MEM__
+            cpu: __CPU__
+          limits:
+            memory: __MEM__
+            cpu: __CPU__
+
+        volumeMounts:
+          - name: __NAME__
+            mountPath: /data/logs/data-analysis/
+      imagePullSecrets:
+      - name: data-analysis-zhouxm
